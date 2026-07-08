@@ -1,0 +1,10 @@
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+  "B008",  # FastAPI's Depends(...) in argument defaults is the framework's standard idiom
+  "UP042", # StrEnum migration not worth the churn for a purely internal enum
+]
