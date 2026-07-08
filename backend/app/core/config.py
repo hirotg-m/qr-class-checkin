@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from functools import lru_cache
+from functools import cache
 
 import boto3
 
@@ -21,7 +21,7 @@ def table_name(logical_name: str) -> str:
     return f"{DYNAMODB_TABLE_PREFIX}{logical_name}"
 
 
-@lru_cache(maxsize=None)
+@cache
 def _ssm_parameter(name: str) -> str:
     client = boto3.client("ssm", region_name=AWS_REGION)
     response = client.get_parameter(Name=name, WithDecryption=True)

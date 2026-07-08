@@ -4,7 +4,7 @@
 
 ## 1. ディレクトリ構成
 
-```
+```text
 backend/
   app/
     main.py                    # FastAPIインスタンス生成、ルーター登録、Mangumハンドラ
@@ -50,7 +50,7 @@ backend/
 
 ## 2. レイヤー構成
 
-```
+```text
 Router（HTTP入出力・Pydanticバリデーション）
    ↓
 Domain/Service（ビジネスロジック：受付時間判定・PIN照合・表記ゆれマッチング）

@@ -29,7 +29,7 @@ QR コードを使ったスポーツ教室の会員・出欠管理システム�
 
 ## アーキテクチャ（計画）
 
-```
+```text
 [S3 + CloudFront]  静的ホスティング（管理画面フロント：React, Node.js 22）
         ↓
 [API Gateway]      HTTP API
@@ -44,7 +44,7 @@ QR コードを使ったスポーツ教室の会員・出欠管理システム�
 - 環境分離（dev/prod）は行わない。独自ドメインも使用しない（コスト抑制のため。目標：月額300円以下）。
 
 ### 想定リポジトリ構成
-```
+```text
 /frontend        React
 /backend         FastAPI + Lambda ハンドラ（Mangum）
 /infra

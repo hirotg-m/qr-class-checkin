@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from tests.helpers import admin_headers, setup_class_with_today_schedule, viewer_headers
+from tests.helpers import setup_class_with_today_schedule, viewer_headers
 
 
 def test_viewer_proxy_rejected_outside_reception_window(client):

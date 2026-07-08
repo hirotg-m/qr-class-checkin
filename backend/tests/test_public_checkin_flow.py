@@ -209,3 +209,42 @@ def test_checkin_token_scoped_to_class(client):
     )
     assert response.status_code == 401
     assert response.json()["error"]["code"] == "UNAUTHORIZED"
+
+
+def test_pin_rate_limited_after_10_failures(client):
+    class_id, _, _ = setup_class_with_today_schedule(client)
+    for _ in range(10):
+        client.post(f"/public/classes/{class_id}/pin", json={"pin": "0000"})
+    response = client.post(f"/public/classes/{class_id}/pin", json={"pin": "0000"})
+    assert response.status_code == 429
+    assert response.json()["error"]["code"] == "RATE_LIMITED"
+
+    # 正しいPINでも、ロック中は試せない
+    response = client.post(f"/public/classes/{class_id}/pin", json={"pin": "1234"})
+    assert response.status_code == 429
+
+
+def test_successful_pin_resets_failure_count(client):
+    class_id, _, _ = setup_class_with_today_schedule(client)
+    for _ in range(9):
+        client.post(f"/public/classes/{class_id}/pin", json={"pin": "0000"})
+
+    ok = client.post(f"/public/classes/{class_id}/pin", json={"pin": "1234"})
+    assert ok.status_code == 200
+
+    # 直前の失敗回数がリセットされているため、まだロックされない
+    response = client.post(f"/public/classes/{class_id}/pin", json={"pin": "0000"})
+    assert response.status_code == 401
+
+
+def test_pin_rate_limit_scoped_per_class(client):
+    class_id_a, _, _ = setup_class_with_today_schedule(client)
+    class_id_b, _, _ = setup_class_with_today_schedule(client)
+
+    for _ in range(10):
+        client.post(f"/public/classes/{class_id_a}/pin", json={"pin": "0000"})
+    assert client.post(f"/public/classes/{class_id_a}/pin", json={"pin": "0000"}).status_code == 429
+
+    # 別クラスのPIN試行は影響を受けない
+    response = client.post(f"/public/classes/{class_id_b}/pin", json={"pin": "1234"})
+    assert response.status_code == 200

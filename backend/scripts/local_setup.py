@@ -66,7 +66,7 @@ def main() -> None:
     )
     print("seeded: Classes c_001")
 
-    from datetime import date, timedelta
+    from datetime import date
 
     today = date.today()
     resource.Table("Schedule").put_item(

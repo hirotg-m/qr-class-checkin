@@ -2,14 +2,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from app.api.routers._shared import build_checkin_response
 from app.core import security
 from app.core.errors import AppError
 from app.domain import checkin_service
 from app.domain.reception_window import ScheduleEntry, is_accepting_now
-from app.repositories import classes_repo, pin_repo, schedule_repo
+from app.repositories import classes_repo, login_attempts_repo, pin_repo, schedule_repo
 from app.schemas.public_schemas import (
     CheckinConfirmRequest,
     CheckinConfirmResponse,
@@ -64,13 +64,25 @@ def get_class_info(class_id: str) -> ClassInfoResponse:
 
 
 @router.post("/classes/{class_id}/pin", response_model=PinVerifyResponse)
-def verify_pin(class_id: str, payload: PinVerifyRequest) -> PinVerifyResponse:
+def verify_pin(class_id: str, payload: PinVerifyRequest, request: Request) -> PinVerifyResponse:
+    """総当たり対策：同一クラス・同一IPからの失敗が続くと一時ロックする（8.2節と同じ仕組みを
+    `pin:{class_id}:{client_ip}`の名前空間で共有）。PINは4桁程度と桁数が少ないため、指導者ログイン
+    より閾値・ロック時間を厳しくしすぎると保護者の入力ミスで支障が出る（docs/api.md 1.2節）。"""
     _require_class(class_id)
+    client_ip = request.client.host if request.client else "unknown"
+    attempt_key = f"pin:{class_id}:{client_ip}"
+
+    if login_attempts_repo.is_locked(attempt_key):
+        raise AppError("RATE_LIMITED", 429, "試行回数が上限を超えました。しばらく待ってから再試行してください")
+
     now = _now()
     month = now.strftime("%Y-%m")
     expected = pin_repo.get_pin(class_id, month)
     if expected is None or payload.pin != expected:
+        login_attempts_repo.record_failure(attempt_key)
         raise AppError("INVALID_PIN", 401, "PINが正しくありません")
+
+    login_attempts_repo.reset(attempt_key)
     token, expires_in = security.create_checkin_token(class_id)
     return PinVerifyResponse(checkinToken=token, expiresIn=expires_in)
 

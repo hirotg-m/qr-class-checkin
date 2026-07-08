@@ -1,0 +1,17 @@
+{
+  // このリポジトリの既存ドキュメントの書式（見出し直後に空行を入れない、
+  // テーブルはコンパクトなパイプ区切り、長い日本語+コード識別子の行を許容）に
+  // 合わせて、内容面のミスを検出するルールのみ有効化する。
+  "config": {
+    "default": true,
+    "MD013": false, // line-length: 日本語+コード識別子の行は80桁を超えやすい
+    "MD022": false, // blanks-around-headings
+    "MD031": false, // blanks-around-fences
+    "MD032": false, // blanks-around-lists
+    "MD036": false, // no-emphasis-as-heading（見出し直下の**リクエスト**等の擬似見出し）
+    "MD058": false, // blanks-around-tables
+    "MD060": false // table-column-style
+  },
+  "globs": ["**/*.md"],
+  "ignores": ["**/node_modules/**", "**/.venv/**", "**/dist/**"]
+}
